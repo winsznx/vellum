@@ -42,6 +42,7 @@
 .wrapfoot .par { font-size: 12px; color: var(--text-tertiary); }
 .wrapfoot .par b { color: var(--text-secondary); font-family: var(--font-mono); font-weight: 500; }
 .wrapbtn { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #fff; background: var(--flow-500); border: 0; padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; }
+.wrapbtn:hover { background: var(--flow-600); }
 .wrapbtn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
 
 /* registry table */
@@ -49,7 +50,7 @@
 .rh { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; border-bottom: 1px solid var(--border-hairline); }
 .rh .t { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 .rh .c { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); }
-.thead { display: grid; grid-template-columns: 1.5fr 1.5fr .9fr; padding: 9px 18px; font-size: 11px; color: var(--text-tertiary); letter-spacing: .03em; text-transform: uppercase; border-bottom: 1px solid var(--border-hairline); }
+.thead { display: grid; grid-template-columns: 1.5fr 1.5fr .9fr; padding: 9px 18px; font-size: 11px; color: var(--text-secondary); letter-spacing: .03em; text-transform: uppercase; border-bottom: 1px solid var(--border-hairline); }
 .trow { display: grid; grid-template-columns: 1.5fr 1.5fr .9fr; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border-hairline); }
 .trow:last-child { border-bottom: 0; }
 .trow.on { background: rgba(85, 98, 224, .07); }

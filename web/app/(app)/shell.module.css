@@ -1,7 +1,7 @@
 /* App shell — sidebar + topbar, ported verbatim from the dark product-frame screens
    (vellum-screen-*.html). Dark is primary. */
 
-.app { display: grid; grid-template-columns: 264px 1fr; min-height: 100vh; }
+.app { display: grid; grid-template-columns: 264px 1fr; height: 100vh; overflow: hidden; }
 
 /* sidebar */
 .sidebar { border-right: 1px solid var(--border-hairline); padding: 22px 16px; display: flex; flex-direction: column; gap: 6px; background: var(--ink-900); }
@@ -21,8 +21,8 @@
 .sideFoot .id { font-family: var(--font-mono); font-size: 12.5px; color: var(--text-secondary); }
 
 /* topbar */
-.main { display: flex; flex-direction: column; min-width: 0; }
-.topbar { height: 60px; border-bottom: 1px solid var(--border-hairline); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: rgba(10, 11, 14, .6); backdrop-filter: blur(6px); position: sticky; top: 0; z-index: 20; }
+.main { display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow-y: auto; }
+.topbar { height: 60px; flex: none; border-bottom: 1px solid var(--border-hairline); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: var(--surface-sunken); position: sticky; top: 0; z-index: 20; }
 .crumb { font-size: 13.5px; color: var(--text-tertiary); }
 .crumb b { color: var(--text-secondary); font-weight: 500; }
 .crumb .here { color: var(--text-primary); font-weight: 600; }
@@ -31,6 +31,7 @@
 .netdot { width: 7px; height: 7px; border-radius: 50%; background: var(--flow-500); box-shadow: 0 0 8px var(--flow-500); }
 
 @media (max-width: 1024px) {
-  .app { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .main { height: auto; overflow: visible; }
   .sidebar { display: none; }
 }

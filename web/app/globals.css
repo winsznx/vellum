@@ -73,7 +73,8 @@
   --surface-base: var(--ink-950); --surface-sunken: var(--ink-900);
   --surface-raised: var(--ink-850); --surface-overlay: var(--ink-800);
   --border-hairline: rgba(255, 255, 255, .08); --border-strong: rgba(255, 255, 255, .14);
-  --text-primary: var(--slate-50); --text-secondary: var(--slate-300); --text-tertiary: var(--slate-500);
+  /* tertiary lifted slate-500 → slate-400 (~3.1:1 → ~4.9:1) so dim labels/values pass AA on dark */
+  --text-primary: var(--slate-50); --text-secondary: var(--slate-300); --text-tertiary: var(--slate-400);
   --text-inverse: var(--ink-950);
 }
 /* 1.3 semantic tokens — LIGHT (peer) */

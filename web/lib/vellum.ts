@@ -107,6 +107,21 @@ export const NOTE_ABI = [
   { type: "function", name: "getPayoff", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "bytes32" }] },
   { type: "function", name: "getRefEnd", stateMutability: "view", inputs: [{ type: "uint256" }], outputs: [{ type: "uint64" }] },
   { type: "function", name: "claim", stateMutability: "nonpayable", inputs: [{ type: "uint256" }], outputs: [] },
+  {
+    type: "event", name: "Issued",
+    inputs: [
+      { name: "id", type: "uint256", indexed: true },
+      { name: "issuer", type: "address", indexed: true },
+      { name: "holder", type: "address", indexed: true },
+      { name: "principal", type: "uint64", indexed: false },
+      { name: "cap", type: "uint64", indexed: false },
+      { name: "windowStart", type: "uint64", indexed: false },
+      { name: "windowEnd", type: "uint64", indexed: false },
+      { name: "wrapped", type: "uint256", indexed: false },
+    ],
+  },
+  { type: "event", name: "Settled", inputs: [{ name: "id", type: "uint256", indexed: true }, { name: "refEnd", type: "uint64", indexed: false }, { name: "mode", type: "uint8", indexed: false }] },
+  { type: "event", name: "Claimed", inputs: [{ name: "id", type: "uint256", indexed: true }, { name: "holder", type: "address", indexed: true }] },
 ] as const;
 
 export const AGGREGATOR_ABI = [
