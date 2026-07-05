@@ -1,0 +1,30 @@
+# deps
+node_modules/
+web/node_modules/
+
+# secrets
+.env
+.env.*
+!.env.example
+web/.env.local
+web/.env.local.example
+
+# hardhat build outputs
+artifacts/
+cache/
+typechain-types/
+fhevmTemp/
+deployments/
+
+# next.js
+web/.next/
+web/next-env.d.ts
+web/*.tsbuildinfo
+
+# internal — process evidence, reports, design source, logs (not for the public repo)
+internal/
+
+# stray dev files
+*.log
+.vellum-*
+.DS_Store

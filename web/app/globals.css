@@ -1,0 +1,118 @@
+/* Vellum Design System — tokens ported verbatim from vellum-design-system.md §1.
+   Do not restyle. Dark is primary; light is a full peer. */
+
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap");
+
+:root {
+  /* 1.1 INK — dark surfaces */
+  --ink-950: #0A0B0E; --ink-900: #0E1014; --ink-850: #14161C; --ink-800: #1A1D25; --ink-750: #21252F;
+
+  /* 1.1 SLATE — neutral ramp */
+  --slate-950: #0C0E12; --slate-900: #14171D; --slate-800: #1D212A; --slate-700: #2A2F3B;
+  --slate-600: #3C4350; --slate-500: #59616F; --slate-400: #7B8390; --slate-300: #A4ABB6;
+  --slate-200: #C9CDD5; --slate-100: #E5E8EC; --slate-50: #F3F5F7;
+
+  /* 1.1 PAPER — light surfaces */
+  --paper-0: #FFFFFF; --paper-50: #FBFBFA; --paper-100: #F6F6F4; --paper-200: #EDEEEB;
+
+  /* 1.2 CIPHER — Encrypted state */
+  --cipher-700: #2E3851; --cipher-600: #3C4863; --cipher-500: #586A8C; --cipher-400: #8390AC; --cipher-300: #AEB8CB;
+  /* 1.2 REVEAL — Revealed state (the single warm hue) */
+  --reveal-700: #B5791C; --reveal-600: #D69327; --reveal-500: #ECA63A; --reveal-400: #F4C06B; --reveal-300: #F9D79C;
+  /* 1.2 SETTLE — Settlement state */
+  --settle-700: #0C6E5E; --settle-600: #128974; --settle-500: #18A589; --settle-400: #4FC0A8; --settle-300: #8AD6C6;
+  /* 1.2 FLOW — Composition state */
+  --flow-700: #2F3AB0; --flow-600: #3D49C9; --flow-500: #5562E0; --flow-400: #818BEC; --flow-300: #AEB4F4;
+  /* 1.2 FUNCTIONAL — danger only */
+  --danger-600: #B8402A; --danger-500: #D14A33; --danger-400: #E0735E;
+
+  /* 1.4 Typography */
+  --font-sans: "General Sans", "Switzer", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  /* 1.5 Spacing */
+  --space-0: 0; --space-0_5: 2px; --space-1: 4px; --space-1_5: 6px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px; --space-10: 40px;
+  --space-12: 48px; --space-14: 56px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
+  --space-32: 128px; --space-40: 160px; --space-48: 192px; --space-64: 256px;
+
+  /* 1.6 Radii */
+  --radius-none: 0; --radius-xs: 4px; --radius-sm: 6px; --radius-md: 8px;
+  --radius-lg: 12px; --radius-xl: 16px; --radius-2xl: 20px; --radius-full: 9999px;
+
+  /* 1.7 Elevation */
+  --elev-0: none;
+  --elev-1: 0 1px 2px rgba(8, 10, 14, .06);
+  --elev-2: 0 4px 14px rgba(8, 10, 14, .10);
+  --elev-3: 0 12px 32px rgba(8, 10, 14, .18);
+  --elev-4: 0 8px 24px rgba(8, 10, 14, .16);
+
+  /* 1.8 Motion */
+  --duration-instant: 0ms; --duration-fast: 120ms; --duration-base: 200ms;
+  --duration-moderate: 320ms; --duration-slow: 480ms; --duration-reveal: 560ms;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(.3, 0, 0, 1);
+  --ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --ease-reveal: cubic-bezier(.16, 1, .3, 1);
+
+  /* 1.9 Iconography */
+  --icon-xs: 14px; --icon-sm: 16px; --icon-md: 20px; --icon-lg: 24px; --icon-xl: 32px;
+
+  /* 1.10 Breakpoints (reference) */
+  --bp-sm: 640px; --bp-md: 768px; --bp-lg: 1024px; --bp-xl: 1280px; --bp-2xl: 1536px;
+
+  /* PROTOCOL-STATE aliases */
+  --state-encrypted: var(--cipher-500); --state-encrypted-weak: var(--cipher-400);
+  --state-revealed: var(--reveal-500); --state-settled: var(--settle-500);
+  --state-composing: var(--flow-500); --focus-ring: var(--flow-500);
+}
+
+/* 1.3 semantic tokens — DARK (primary) */
+[data-theme="dark"] {
+  --surface-base: var(--ink-950); --surface-sunken: var(--ink-900);
+  --surface-raised: var(--ink-850); --surface-overlay: var(--ink-800);
+  --border-hairline: rgba(255, 255, 255, .08); --border-strong: rgba(255, 255, 255, .14);
+  --text-primary: var(--slate-50); --text-secondary: var(--slate-300); --text-tertiary: var(--slate-500);
+  --text-inverse: var(--ink-950);
+}
+/* 1.3 semantic tokens — LIGHT (peer) */
+[data-theme="light"] {
+  --surface-base: var(--paper-50); --surface-sunken: var(--paper-100);
+  --surface-raised: var(--paper-0); --surface-overlay: var(--paper-0);
+  --border-hairline: rgba(12, 14, 18, .08); --border-strong: rgba(12, 14, 18, .14);
+  --text-primary: var(--slate-900); --text-secondary: var(--slate-600); --text-tertiary: var(--slate-400);
+  --text-inverse: var(--paper-0);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -.002em;
+}
+a { color: inherit; }
+
+/* register law: mono carries every machine value/ciphertext */
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Seal primitive — ciphertext glyph (design-system 1.4) */
+.seal-text { font-family: var(--font-mono); letter-spacing: .04em; color: var(--state-encrypted); }
+
+/* the one expressive moment — reveal unmask */
+@keyframes vellum-reveal {
+  from { opacity: 0; filter: blur(6px); transform: translateY(2px); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+.revealing { animation: vellum-reveal var(--duration-reveal) var(--ease-reveal); }
+
+@media (prefers-reduced-motion: reduce) {
+  .revealing { animation: none; }
+}
+
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }

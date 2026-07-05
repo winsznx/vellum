@@ -1,0 +1,166 @@
+/* Landing — ported verbatim from vellum-landing-v2.html <style>. Do not restyle.
+   Scoped under .landing so the paper-mode landing palette never leaks into the dark app shell. */
+
+.landing {
+  /* light page (paper) — landing-local palette from the source file */
+  --paper: #EAE8E1; --paper-2: #E3E1D9; --card: #F7F6F1; --card-2: #FBFAF6;
+  --ink-text: #0B0C10; --ink-2: #3C4350; --ink-3: #6A7280;
+  --hair: rgba(11, 12, 16, .10); --hair-2: rgba(11, 12, 16, .06);
+  --rxl: 26px; --r2xl: 32px; --rlg: 16px; --rmd: 10px; --rfull: 9999px;
+  --flow-600: #4049C0;
+  background: var(--paper);
+  color: var(--ink-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -.004em;
+  min-height: 100vh;
+}
+.landing .wrap { max-width: 1240px; margin: 0 auto; padding: 0 26px; }
+.landing .mono { font-family: var(--font-mono); }
+.landing .dots { background-image: radial-gradient(rgba(11, 12, 16, .07) 1.4px, transparent 1.5px); background-size: 22px 22px; }
+
+/* floating pill nav */
+.landing .navbar { position: sticky; top: 0; z-index: 40; padding: 16px 0; display: flex; justify-content: center; }
+.landing .pill { display: flex; align-items: center; gap: 8px; background: var(--card-2); border: 1px solid var(--hair); border-radius: var(--rfull); padding: 8px 8px 8px 18px; box-shadow: 0 8px 30px rgba(11, 12, 16, .08); }
+.landing .brand { display: flex; align-items: center; gap: 10px; padding-right: 6px; }
+.landing .brand .mark { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, var(--cipher-500), var(--reveal-500)); position: relative; }
+.landing .brand .mark::after { content: ""; position: absolute; inset: 6px; border-radius: 2px; background: var(--card-2); }
+.landing .brand b { font-weight: 700; font-size: 16px; letter-spacing: -.02em; }
+.landing .tick { width: 1px; height: 20px; background: var(--hair); margin: 0 6px; }
+.landing .pill nav { display: flex; gap: 4px; }
+.landing .pill nav a { font-size: 14.5px; font-weight: 500; color: var(--ink-2); text-decoration: none; padding: 8px 12px; border-radius: var(--rfull); }
+.landing .pill nav a:hover { background: rgba(11, 12, 16, .05); color: var(--ink-text); }
+.landing .soc { display: flex; gap: 4px; }
+.landing .soc a { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: var(--rfull); color: var(--ink-2); }
+.landing .soc a:hover { background: rgba(11, 12, 16, .05); }
+.landing .soc svg { width: 16px; height: 16px; fill: currentColor; }
+.landing .cta { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; background: var(--flow-500); color: #fff; border: 0; border-radius: var(--rfull); padding: 10px 18px; text-decoration: none; cursor: pointer; }
+.landing .cta:hover { background: var(--flow-600); }
+.landing .cta svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+@media (max-width: 880px) { .landing .pill nav, .landing .soc, .landing .tick { display: none; } }
+
+/* hero */
+.landing .hero { padding: clamp(40px, 7vw, 86px) 0 clamp(48px, 7vw, 92px); }
+.landing .htag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-2); background: var(--card); border: 1px solid var(--hair); padding: 6px 13px; border-radius: var(--rfull); margin-bottom: 26px; }
+.landing .htag svg { width: 13px; height: 13px; stroke: var(--cipher-500); stroke-width: 1.8; fill: none; }
+.landing h1 { font-size: clamp(48px, 9.4vw, 136px); font-weight: 700; line-height: .9; letter-spacing: -.05em; max-width: 14ch; }
+.landing h1 .mut { color: var(--ink-3); }
+.landing .hsub { margin-top: 26px; font-size: clamp(17px, 1.7vw, 20px); color: var(--ink-2); max-width: 54ch; line-height: 1.5; }
+.landing .hcta { margin-top: 32px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.landing .hcta .big { padding: 14px 26px; font-size: 15.5px; }
+.landing .hcta .note { font-size: 13.5px; color: var(--ink-3); }
+
+/* protocol art block (dark) */
+.landing .proto { margin-top: 96px; border-radius: var(--r2xl); background: var(--ink-950); padding: clamp(52px, 6vw, 84px) clamp(28px, 4vw, 52px); box-shadow: 0 30px 80px rgba(11, 12, 16, .18); min-height: 460px; display: flex; flex-direction: column; justify-content: center; }
+.landing .proto .eyebrow { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--cipher-400); text-align: center; margin-bottom: clamp(36px, 5vw, 56px); }
+.landing .flow { display: flex; align-items: flex-start; gap: 0; }
+.landing .stage { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 4px 10px; }
+.landing .stage .ico { width: 78px; height: 78px; border-radius: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, .1); background: var(--ink-850); }
+.landing .stage .ico svg { width: 32px; height: 32px; stroke-width: 1.6; fill: none; }
+.landing .stage .nm { font-size: 17px; font-weight: 600; color: var(--slate-50); }
+.landing .stage .sub { font-family: var(--font-mono); font-size: 12px; color: var(--slate-500); }
+.landing .stage.sealed .ico svg, .landing .stage.computed .ico svg { stroke: var(--cipher-400); }
+.landing .stage.sealed .nm, .landing .stage.computed .nm { color: var(--cipher-300); }
+.landing .stage.sealed .ico, .landing .stage.computed .ico { border-color: rgba(88, 106, 140, .4); }
+.landing .stage.asset .ico svg { stroke: var(--slate-300); }
+.landing .stage.revealed .ico { border-color: rgba(236, 166, 58, .5); box-shadow: 0 0 50px rgba(236, 166, 58, .28); }
+.landing .stage.revealed .ico svg { stroke: var(--reveal-400); }
+.landing .stage.revealed .nm { color: var(--reveal-400); }
+.landing .conn { flex: 0 0 88px; height: 2px; margin-top: 38px; background: linear-gradient(90deg, var(--cipher-500), var(--cipher-400)); }
+.landing .conn.warm { background: linear-gradient(90deg, var(--cipher-400), var(--reveal-500)); }
+@media (max-width: 720px) { .landing .flow { flex-direction: column; gap: 18px; } .landing .conn { width: 2px; height: 30px; flex: 0 0 30px; margin: 0 0 0 38px; } .landing .stage { flex-direction: row; text-align: left; } }
+
+/* bento feature sections */
+.landing section.feat { padding: clamp(54px, 7vw, 96px) 0; }
+.landing .split { display: grid; grid-template-columns: 1fr 1.18fr; gap: 54px; align-items: center; }
+.landing .split.rev { grid-template-columns: 1.18fr 1fr; }
+.landing .split.rev .copy { order: 2; }
+@media (max-width: 900px) { .landing .split, .landing .split.rev { grid-template-columns: 1fr; gap: 30px; } .landing .split.rev .copy { order: 0; } }
+.landing .slabel { display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 18px; }
+.landing .slabel .d { width: 9px; height: 9px; border-radius: 3px; }
+.landing .d.cipher { background: var(--cipher-500); } .landing .d.warm { background: var(--reveal-500); } .landing .d.flow { background: var(--flow-500); }
+.landing .idea { font-size: clamp(32px, 4.4vw, 56px); font-weight: 700; letter-spacing: -.03em; line-height: 1.04; max-width: 14ch; }
+.landing .idea .cipher { color: var(--cipher-500); } .landing .idea .warm { color: #C8861F; }
+.landing .icap { margin-top: 16px; color: var(--ink-2); font-size: 16px; max-width: 46ch; }
+
+/* dark product frame */
+.landing .frame { border-radius: var(--rxl); overflow: hidden; background: var(--ink-950); box-shadow: 0 30px 80px rgba(11, 12, 16, .22); }
+.landing .fbar { height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(255, 255, 255, .07); background: var(--ink-900); }
+.landing .fbar .l { font-size: 12px; color: var(--slate-500); font-family: var(--font-mono); }
+.landing .fbar .net { font-size: 11px; color: var(--flow-400); border: 1px solid rgba(85, 98, 224, .32); background: rgba(85, 98, 224, .1); padding: 2px 9px; border-radius: var(--rfull); }
+.landing .fbody { padding: 26px; }
+.landing .seal { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); color: var(--cipher-400); letter-spacing: .14em; background: rgba(88, 106, 140, .16); border: 1px solid rgba(88, 106, 140, .22); padding: 3px 9px; border-radius: 6px; font-size: 12px; }
+.landing .seal svg { width: 11px; height: 11px; stroke: var(--cipher-400); stroke-width: 1.8; fill: none; }
+.landing .chip-set { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 600; color: var(--settle-400); background: rgba(24, 165, 137, .1); border: 1px solid rgba(24, 165, 137, .28); padding: 5px 11px; border-radius: var(--rfull); }
+.landing .chip-set svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+.landing .domlab { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
+.landing .cpk { font-size: 12px; color: var(--slate-500); margin-bottom: 8px; }
+.landing .cbignum { font-family: var(--font-mono); font-weight: 500; font-size: clamp(48px, 8.4vw, 74px); line-height: .95; letter-spacing: -.025em; }
+.landing .cbignum .cu { font-size: 21px; color: var(--reveal-300); margin-left: 9px; letter-spacing: 0; }
+.landing .depsupport { margin-top: 22px; border-top: 1px solid rgba(255, 255, 255, .07); padding-top: 16px; }
+.landing .depsupport .cap { font-size: 11px; color: var(--cipher-400); margin-bottom: 11px; font-family: var(--font-mono); letter-spacing: .04em; }
+.landing .deprow { display: flex; gap: 10px; flex-wrap: wrap; }
+.landing .deprow .dep { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12.5px; color: var(--slate-400); }
+
+/* reveal rows */
+.landing .alloc { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.landing .warmval { font-family: var(--font-mono); font-weight: 500; color: var(--reveal-400); text-shadow: 0 0 12px rgba(236, 166, 58, .35), 0 0 46px rgba(236, 166, 58, .45); }
+.landing .alloc .big { font-size: clamp(38px, 5vw, 52px); line-height: .95; letter-spacing: -.02em; }
+.landing .alloc .big .u { font-size: 17px; color: var(--reveal-300); margin-left: 6px; }
+.landing .rrow { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid rgba(255, 255, 255, .07); font-family: var(--font-mono); font-size: 12.5px; }
+.landing .rrow.you { color: var(--slate-50); }
+.landing .rrow .you-b { font-family: var(--font-sans); font-size: 10px; font-weight: 600; color: var(--reveal-300); background: rgba(236, 166, 58, .14); border: 1px solid rgba(236, 166, 58, .3); padding: 1px 7px; border-radius: var(--rfull); margin-right: 9px; }
+.landing .rrow .a { color: var(--cipher-400); letter-spacing: .14em; } .landing .rrow .amt { color: var(--reveal-400); }
+.landing .rmore { padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .07); font-size: 11.5px; color: var(--slate-500); }
+
+/* composition: vertical theater */
+.landing .band { margin: clamp(24px, 4vw, 48px) 0; border-radius: var(--r2xl); background: var(--ink-950); padding: clamp(56px, 8vw, 104px) clamp(28px, 4vw, 56px); box-shadow: 0 30px 80px rgba(11, 12, 16, .2); min-height: 82vh; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.landing .toplabel { font-family: var(--font-mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--flow-400); margin-bottom: clamp(28px, 5vw, 60px); }
+.landing .stack { display: flex; flex-direction: column; align-items: center; }
+.landing .gverb { font-weight: 700; letter-spacing: -.045em; line-height: .9; font-size: clamp(62px, 15vw, 196px); }
+.landing .gverb.s { color: var(--cipher-400); } .landing .gverb.c { color: var(--cipher-300); }
+.landing .gverb.r { color: var(--reveal-400); text-shadow: 0 0 30px rgba(236, 166, 58, .3), 0 0 100px rgba(236, 166, 58, .4); }
+.landing .gverb .cap { display: block; font-family: var(--font-mono); font-size: clamp(10px, 1vw, 12.5px); font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--slate-500); margin-top: 10px; }
+.landing .gstate { display: block; font-family: var(--font-mono); font-size: clamp(13px, 1.4vw, 18px); margin-top: 12px; letter-spacing: .06em; }
+.landing .gstate.sealed { color: var(--cipher-400); }
+.landing .gstate.warm { color: var(--reveal-400); text-shadow: 0 0 30px rgba(236, 166, 58, .4); }
+.landing .gstate .tiny { font-size: .7em; color: var(--slate-500); letter-spacing: .04em; }
+.landing .garrow { color: var(--slate-600); margin: clamp(6px, 1.2vw, 16px) 0; }
+.landing .garrow svg { width: clamp(24px, 3vw, 38px); height: auto; stroke: currentColor; stroke-width: 1.5; fill: none; }
+.landing .garrow.warm { color: rgba(236, 166, 58, .5); }
+
+/* why fhe */
+.landing .why { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+@media (max-width: 760px) { .landing .why { grid-template-columns: 1fr; } }
+.landing .wbox { border-radius: var(--rxl); padding: 26px; }
+.landing .wbox.legible { background: var(--card); border: 1px solid var(--hair); }
+.landing .wbox.legible .h { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px; }
+.landing .wbox.legible .line { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 14px; color: var(--ink-2); padding: 9px 0; border-bottom: 1px solid var(--hair-2); }
+.landing .wbox.legible .line:last-child { border: 0; } .landing .wbox.legible .exposed { color: var(--ink-text); font-weight: 500; }
+.landing .wbox.sealedbox { background: var(--ink-950); }
+.landing .wbox.sealedbox .h { font-family: var(--font-mono); font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--cipher-400); margin-bottom: 16px; }
+.landing .wbox.sealedbox .line { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 14px; color: var(--slate-400); padding: 9px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+.landing .wbox.sealedbox .line:last-child { border: 0; }
+
+/* footer card */
+.landing .foot { padding: 18px 0 50px; }
+.landing .footcard { background: var(--ink-950); border-radius: var(--r2xl); padding: clamp(34px, 4vw, 56px); position: relative; overflow: hidden; }
+.landing .footcard .verbs { display: flex; flex-wrap: wrap; gap: clamp(12px, 2.2vw, 26px); font-size: clamp(46px, 10vw, 116px); font-weight: 700; letter-spacing: -.045em; line-height: .9; margin-bottom: 28px; }
+.landing .footcard .verbs .s { color: var(--cipher-400); } .landing .footcard .verbs .c { color: var(--cipher-300); }
+.landing .footcard .verbs .r { color: var(--reveal-400); text-shadow: 0 0 30px rgba(236, 166, 58, .3), 0 0 90px rgba(236, 166, 58, .38); }
+.landing .footcard h2 { color: var(--slate-50); font-size: clamp(24px, 3vw, 38px); font-weight: 700; letter-spacing: -.025em; max-width: 20ch; }
+.landing .footcard p { color: var(--slate-400); margin-top: 12px; max-width: 46ch; }
+.landing .footcard .fcta { margin-top: 28px; }
+.landing .fgrid { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 46px; padding-top: 26px; border-top: 1px solid rgba(255, 255, 255, .08); flex-wrap: wrap; }
+.landing .fbrand { display: flex; align-items: center; gap: 10px; }
+.landing .fbrand .mark { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, var(--cipher-500), var(--reveal-500)); position: relative; }
+.landing .fbrand .mark::after { content: ""; position: absolute; inset: 6px; border-radius: 2px; background: var(--ink-950); }
+.landing .fbrand b { color: #fff; font-weight: 700; }
+.landing .flinks { display: flex; gap: 22px; flex-wrap: wrap; }
+.landing .flinks a { color: var(--slate-400); text-decoration: none; font-size: 14px; } .landing .flinks a:hover { color: #fff; }
+.landing .fmeta { margin-top: 20px; font-family: var(--font-mono); font-size: 12px; color: var(--slate-600); }
+.landing .fsoc { display: flex; gap: 10px; }
+.landing .fsoc a { width: 38px; height: 38px; border-radius: var(--rfull); background: var(--ink-850); display: flex; align-items: center; justify-content: center; color: var(--slate-300); }
+.landing .fsoc a:hover { background: var(--flow-500); color: #fff; }
+.landing .fsoc svg { width: 16px; height: 16px; fill: currentColor; }
