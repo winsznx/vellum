@@ -13,6 +13,12 @@ type EIP712 = {
   message: Record<string, unknown>;
 };
 
+type EncryptedInputBuilder = {
+  add64: (value: bigint) => EncryptedInputBuilder;
+  encrypt: () => Promise<{ handles: Uint8Array[]; inputProof: Uint8Array }>;
+};
+type PublicDecryptResults = { clearValues: Record<string, bigint | boolean | string>; decryptionProof: `0x${string}` };
+
 type FhevmInstance = {
   generateKeypair: () => { publicKey: string; privateKey: string };
   createEIP712: (publicKey: string, contracts: string[], start: number, days: number) => EIP712;
@@ -26,18 +32,23 @@ type FhevmInstance = {
     start: number,
     days: number,
   ) => Promise<Record<string, bigint | boolean | string>>;
+  createEncryptedInput: (contractAddress: string, userAddress: string) => EncryptedInputBuilder;
+  publicDecrypt: (handles: string[]) => Promise<PublicDecryptResults>;
 };
 
 let _instance: FhevmInstance | null = null;
 
-async function getInstance(eip1193: unknown): Promise<FhevmInstance> {
+async function getInstance(): Promise<FhevmInstance> {
   if (_instance) return _instance;
   // dynamic import: relayer SDK is browser/WASM-heavy, keep it out of the server bundle
   const sdk = await import("@zama-fhe/relayer-sdk/web");
   await sdk.initSDK();
-  // SepoliaConfig omits only `network`; supply the EIP-1193 provider. Cast at this single
-  // boundary since the SDK's exact config type is internal and we model FhevmInstance structurally.
-  const config = { ...sdk.SepoliaConfig, network: eip1193 } as Parameters<typeof sdk.createInstance>[0];
+  // SepoliaConfig omits `network`; supply a Sepolia RPC URL string. The SDK uses it to read chain
+  // state (ACL/contract) — wallet signing happens separately on the ethers signer, so a raw RPC is
+  // the robust choice (extracting an EIP-1193 provider across wallets is unreliable). Cast at this
+  // single boundary since the SDK's config type is internal and we model FhevmInstance structurally.
+  const rpc = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL ?? "https://ethereum-sepolia-rpc.publicnode.com";
+  const config = { ...sdk.SepoliaConfig, network: rpc } as Parameters<typeof sdk.createInstance>[0];
   _instance = (await sdk.createInstance(config)) as unknown as FhevmInstance;
   return _instance;
 }
@@ -57,9 +68,7 @@ export async function revealHandle(args: {
   const { handle, contractAddress, provider } = args;
   const durationDays = args.durationDays ?? 10;
 
-  const eip1193 = (provider as unknown as { provider?: unknown }).provider ?? (window as unknown as { ethereum?: unknown }).ethereum;
-  const instance = await getInstance(eip1193);
-
+  const instance = await getInstance();
   const signer = await provider.getSigner();
   const userAddress = await signer.getAddress();
 
@@ -86,4 +95,89 @@ export async function revealHandle(args: {
   );
 
   return { handle, cleartext: result[handle] as bigint };
+}
+
+export type UnwrapPhase = "encrypting" | "requesting" | "resolving" | "decrypting" | "finalizing" | "done";
+export type UnwrapProgress = { phase: UnwrapPhase; tx?: string };
+
+type WrapperContract = {
+  unwrap: (from: string, to: string, encryptedAmount: string, inputProof: string) => Promise<{ hash: string; wait: () => Promise<{ logs: { topics: readonly string[]; data: string }[] }> }>;
+  unwrapAmount: (id: string) => Promise<string>;
+  finalizeUnwrap: (id: string, cleartext: bigint, proof: string) => Promise<{ hash: string; wait: () => Promise<unknown> }>;
+};
+
+const WRAPPER_UNWRAP_ABI = [
+  "function unwrap(address,address,bytes32,bytes) returns (bytes32)",
+  "function unwrapAmount(bytes32) view returns (bytes32)",
+  "function finalizeUnwrap(bytes32,uint64,bytes)",
+];
+
+/**
+ * Unwrap a confidential ERC-7984 balance back to the public underlying via the two-step
+ * confidential→public flow: encrypt the amount, submit unwrap, public-decrypt the amount with a
+ * KMS proof, then finalize. Mirrors the proven c3-wrap round-trip. Real transactions throughout.
+ */
+export async function unwrapConfidential(args: {
+  wrapper: string;
+  amount: bigint;
+  provider: BrowserProvider;
+  onProgress?: (p: UnwrapProgress) => void;
+}): Promise<{ requestTx: string; finalizeTx: string; amount: bigint }> {
+  const { wrapper, amount, provider, onProgress } = args;
+  const instance = await getInstance();
+  const signer = await provider.getSigner();
+  const user = await signer.getAddress();
+
+  onProgress?.({ phase: "encrypting" });
+  const enc = await instance.createEncryptedInput(wrapper, user).add64(amount).encrypt();
+
+  const { Contract, hexlify, Interface } = await import("ethers");
+  const encHandle = hexlify(enc.handles[0]);
+  const inputProof = hexlify(enc.inputProof);
+  const c = new Contract(wrapper, WRAPPER_UNWRAP_ABI, signer) as unknown as WrapperContract;
+
+  onProgress?.({ phase: "requesting" });
+  const utx = await c.unwrap(user, user, encHandle, inputProof);
+  const receipt = await utx.wait();
+  onProgress?.({ phase: "requesting", tx: utx.hash });
+
+  // Decode the request id + internal encrypted-amount handle from the UnwrapRequested event.
+  // requestId is an indexed topic; `amount` is the on-chain, publicly-decryptable ciphertext handle
+  // (heuristic log-probing grabbed non-handle words → the earlier "Unknown FheType" failures).
+  onProgress?.({ phase: "resolving" });
+  const iface = new Interface(["event UnwrapRequested(address indexed receiver, bytes32 indexed unwrapRequestId, bytes32 amount)"]);
+  let requestId = "";
+  let amountHandle = "";
+  for (const log of receipt.logs) {
+    try {
+      const parsed = iface.parseLog({ topics: log.topics as string[], data: log.data });
+      if (parsed && parsed.name === "UnwrapRequested") {
+        const a = parsed.args as unknown as { unwrapRequestId: string; amount: string };
+        requestId = a.unwrapRequestId;
+        amountHandle = a.amount;
+        break;
+      }
+    } catch {
+      /* not the UnwrapRequested event */
+    }
+  }
+  if (!requestId || !amountHandle) throw new Error("UnwrapRequested event not found in the unwrap transaction.");
+
+  onProgress?.({ phase: "decrypting" });
+  let pd: PublicDecryptResults;
+  try {
+    pd = await instance.publicDecrypt([amountHandle]);
+  } catch (e) {
+    const m = e instanceof Error ? e.message : String(e);
+    throw new Error(`public-decrypt failed · requestId=${requestId} · amountHandle=${amountHandle} :: ${m}`);
+  }
+  const raw = pd.clearValues[amountHandle] ?? Object.values(pd.clearValues)[0];
+  const cleartext = BigInt(raw);
+
+  onProgress?.({ phase: "finalizing" });
+  const ftx = await c.finalizeUnwrap(requestId, cleartext, pd.decryptionProof);
+  await ftx.wait();
+  onProgress?.({ phase: "done", tx: ftx.hash });
+
+  return { requestTx: utx.hash, finalizeTx: ftx.hash, amount: cleartext };
 }

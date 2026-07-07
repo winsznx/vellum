@@ -28,11 +28,19 @@ export const VELLUM_SEPOLIA = {
   oracleAdapter: "0x984f8bfa62389e45BdE5cBe23d398a54445318BB",
   // D0/C1 cUSDM faucet token (ERC-7984) — disperse + note-coupon scaffolding.
   cUSDM: "0xf7c0cdc1e5f8B79741E78b25D014A7a8f7486B16",
-  // Underlying USDC mock (public mint faucet, 6dp) — wraps into the registry's cUSDC.
+  // Underlying USDC mock (public mint faucet, 6dp) — wraps into the registry's cUSDT.
   usdc: "0x9b5Cd13b8eFbB58Dc25A05CF411D8056058aDFfF",
+  // Confidential wrapper for the USDC mock (ERC-7984 · cUSDT). wrap/unwrap round-trip proven on-chain.
+  wrapperCUSDT: "0x7c5BF43B851c1dff1a4feE8dB225b87f2C223639",
   // Live TokenOps /fhe-disperse singleton (D0.3-validated; consumed, never redeployed).
   disperseSingleton: "0x710dD9885Cc9986EfD234E7719483147a6d8DBb4",
 } as const;
+
+// Sepolia explorer helpers — every proof anchor links to a real on-chain artifact.
+export const EXPLORER = "https://sepolia.etherscan.io";
+export const etherscanAddr = (a: string) => `${EXPLORER}/address/${a}`;
+export const etherscanTx = (h: string) => `${EXPLORER}/tx/${h}`;
+export const NETWORK_LABEL = "Sepolia";
 
 // Live Chainlink price feeds on Sepolia (verified on-chain, 8 decimals).
 export const FEEDS_SEPOLIA = {
@@ -69,6 +77,38 @@ export const ERC20_ABI = [
   { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
   { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "allowance", stateMutability: "view", inputs: [{ type: "address" }, { type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "mint", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [] },
+  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
+] as const;
+
+// Confidential ERC-7984 wrapper (USDC ↔ cUSDT). Public wrap in; 2-step confidential→public unwrap out.
+export const WRAPPER_ABI = [
+  { type: "function", name: "name", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+  { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "rate", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "underlying", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
+  { type: "function", name: "confidentialBalanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "bytes32" }] },
+  { type: "function", name: "wrap", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "uint256" }] },
+  {
+    type: "function", name: "unwrap", stateMutability: "nonpayable",
+    inputs: [{ name: "from", type: "address" }, { name: "to", type: "address" }, { name: "encryptedAmount", type: "bytes32" }, { name: "inputProof", type: "bytes" }],
+    outputs: [{ type: "bytes32" }],
+  },
+  { type: "function", name: "unwrapAmount", stateMutability: "view", inputs: [{ type: "bytes32" }], outputs: [{ type: "bytes32" }] },
+  {
+    type: "function", name: "finalizeUnwrap", stateMutability: "nonpayable",
+    inputs: [{ name: "unwrapRequestId", type: "bytes32" }, { name: "unwrapAmountCleartext", type: "uint64" }, { name: "decryptionProof", type: "bytes" }], outputs: [],
+  },
+] as const;
+
+// ERC-7984 faucet token (cUSDM) — open mint + operator authorization for the disperse singleton.
+export const FAUCET7984_ABI = [
+  { type: "function", name: "mint", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint64" }], outputs: [] },
+  { type: "function", name: "setOperator", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint48" }], outputs: [] },
+  { type: "function", name: "isOperator", stateMutability: "view", inputs: [{ type: "address" }, { type: "address" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "confidentialBalanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "bytes32" }] },
 ] as const;
 
 export const ERC7984_ABI = [
