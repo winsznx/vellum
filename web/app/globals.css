@@ -1,8 +1,12 @@
-/* Vellum Design System — tokens ported verbatim from vellum-design-system.md §1.
-   Do not restyle. Dark is primary; light is a full peer. */
-
 @import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Vellum Design System — tokens ported verbatim from vellum-design-system.md §1.
+   Do not restyle. Dark is primary; light is a full peer. */
 
 :root {
   /* 1.1 INK — dark surfaces */
@@ -66,6 +70,13 @@
   --state-encrypted: var(--cipher-500); --state-encrypted-weak: var(--cipher-400);
   --state-revealed: var(--reveal-500); --state-settled: var(--settle-500);
   --state-composing: var(--flow-500); --focus-ring: var(--flow-500);
+
+  /* default semantic tokens — dark primary */
+  --surface-base: var(--ink-950); --surface-sunken: var(--ink-900);
+  --surface-raised: var(--ink-850); --surface-overlay: var(--ink-800);
+  --border-hairline: rgba(255, 255, 255, .08); --border-strong: rgba(255, 255, 255, .14);
+  --text-primary: var(--slate-50); --text-secondary: var(--slate-300); --text-tertiary: var(--slate-400);
+  --text-inverse: var(--ink-950);
 }
 
 /* 1.3 semantic tokens — DARK (primary) */
@@ -86,24 +97,74 @@
   --text-inverse: var(--paper-0);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body {
-  background: var(--surface-base);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: -.002em;
+@layer base {
+  * {
+    @apply border-border-hairline;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    background: var(--surface-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: 0;
+    overflow-x: hidden;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  svg {
+    fill: none;
+  }
 }
-a { color: inherit; }
 
-/* register law: mono carries every machine value/ciphertext */
-.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+@layer components {
+  /* register law: mono carries every machine value/ciphertext */
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
 
-/* Seal primitive — ciphertext glyph (design-system 1.4) */
-.seal-text { font-family: var(--font-mono); letter-spacing: .04em; color: var(--state-encrypted); }
+  /* Seal primitive — ciphertext glyph (design-system 1.4) */
+  .seal-text {
+    font-family: var(--font-mono);
+    letter-spacing: .04em;
+    color: var(--state-encrypted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .vellum-surface {
+    background:
+      radial-gradient(900px 520px at 50% -10%, rgba(85, 98, 224, .05), transparent 70%),
+      var(--surface-base);
+  }
+
+  .prose-vellum {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .prose-vellum p + p {
+    margin-top: 16px;
+  }
+
+  .prose-vellum b {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
 
 /* the one expressive moment — reveal unmask */
 @keyframes vellum-reveal {
