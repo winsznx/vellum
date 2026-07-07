@@ -1,145 +1,447 @@
 "use client";
 
-import { useState } from "react";
-import styles from "./docs.module.css";
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { ArrowLeft, ArrowRight, Check, LockKeyhole } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { MachineValue } from "@/components/vellum/seal";
+import { cn } from "@/lib/utils";
 import { shortAddr } from "@/lib/vellum";
 
 const ex = (a: string) => `https://sepolia.etherscan.io/address/${a}`;
-const sealIcon = <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>;
-const checkIcon = <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" /></svg>;
 
-type Props = { note: string; oracle: string; disperse: string; registry: string; xau: string; eth: string; btc: string };
+type Props = {
+  note: string;
+  oracle: string;
+  disperse: string;
+  registry: string;
+  xau: string;
+  eth: string;
+  btc: string;
+};
+
+type Group = "Overview" | "Builder · Notes" | "Bounty · Registry" | "TokenOps · Distribute" | "Reference";
+type DocPage = { id: string; group: Group; label: string; body: ReactNode };
+
+const GROUPS: Group[] = ["Overview", "Builder · Notes", "Bounty · Registry", "TokenOps · Distribute", "Reference"];
+
+function Formula({ children }: { children: ReactNode }) {
+  return <div className="my-5 rounded-md border border-border-hairline bg-ink-900 px-4 py-3 font-mono text-[13px] leading-6 text-text-primary">{children}</div>;
+}
+
+function ReferenceRow({ label, value, href, state = "flow" }: { label: string; value: string; href?: string; state?: "flow" | "settle" | "cipher" }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-border-hairline px-4 py-3 last:border-b-0">
+      <span className="text-[13px] text-text-secondary">{label}</span>
+      {href ? (
+        <a className="font-mono text-[12.5px] text-flow-400 hover:text-flow-300" href={href} target="_blank" rel="noreferrer">
+          {value} ↗
+        </a>
+      ) : (
+        <MachineValue className={cn("text-[12.5px]", state === "settle" && "text-settle-400", state === "cipher" && "text-cipher-400")}>{value}</MachineValue>
+      )}
+    </div>
+  );
+}
+
+function Steps({ items }: { items: ReactNode[] }) {
+  return (
+    <div className="my-5 grid gap-3">
+      {items.map((text, i) => (
+        <Card key={String(i)} className="flex items-start gap-3 p-4">
+          <MachineValue className="flex size-7 shrink-0 items-center justify-center rounded-md border border-flow-500/30 bg-flow-500/10 text-[12px] text-flow-400">{i + 1}</MachineValue>
+          <span className="text-[13px] leading-6 text-text-secondary">{text}</span>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function SeeList({ items }: { items: [string, string][] }) {
+  return (
+    <Card className="my-5 overflow-hidden">
+      {items.map(([label, desc]) => (
+        <div key={label} className="border-b border-border-hairline px-4 py-3 last:border-b-0">
+          <div className="text-[13px] font-medium text-text-primary">{label}</div>
+          <div className="mt-1 text-[12.5px] leading-5 text-text-secondary">{desc}</div>
+        </div>
+      ))}
+    </Card>
+  );
+}
 
 export function DocsView(p: Props) {
-  // Each page is a self-contained view. Nav switches pages (Mintlify-style), it does not scroll one long doc.
-  const pages = [
-    { id: "what", group: "Overview", label: "What is Vellum", body: (
-      <>
-        <p>A <b>structured note</b> is a financial agreement: you put in principal, and at maturity you get back principal plus a payoff that depends on how a reference asset — here, gold — moved. Vellum makes that agreement <b>confidential</b>: the terms that define it are encrypted, yet the contract still computes the correct payoff and pays it out.</p>
-        <p>It's built on <b>fully homomorphic encryption</b> (FHE) via Zama&apos;s FHEVM: math runs directly on encrypted numbers, so a value can be present and computable on-chain while staying unreadable to everyone but its owner.</p>
-      </>
-    ) },
-    { id: "protocol", group: "Overview", label: "The protocol", body: (
-      <>
-        <p>Three composable steps, each a surface in this app:</p>
-        <div className={styles.states}>
-          <div className={styles.stateCard}><div className={styles.dot} style={{ background: "var(--cipher-500)" }} /><div className={styles.nm}>Seal</div><div className={styles.desc}>Wrap a public token into its confidential twin (ERC-7984). Same value, sealed balance.</div></div>
-          <div className={styles.stateCard}><div className={styles.dot} style={{ background: "var(--cipher-400)" }} /><div className={styles.nm}>Compute</div><div className={styles.desc}>Issue a note. Its payoff settles on encrypted terms — the contract never sees them in the clear.</div></div>
-          <div className={styles.stateCard}><div className={styles.dot} style={{ background: "var(--reveal-500)" }} /><div className={styles.nm}>Reveal</div><div className={styles.desc}>The holder decrypts only their own payoff. Everyone else stays sealed.</div></div>
-        </div>
-      </>
-    ) },
-    { id: "why", group: "Overview", label: "Why FHE", body: (
-      <>
-        <p>To compute on a public blockchain, you normally have to <b>expose</b> the agreement — every counterparty can read your strike, your size, your leverage. That&apos;s a non-starter for real financial products.</p>
-        <p>Vellum keeps the terms encrypted from end to end. The payoff <span className={styles.settle}>still computes correctly</span> while strike and leverage never leave ciphertext. This is a capability that simply didn&apos;t exist on public chains before FHE.</p>
-      </>
-    ) },
-    { id: "payoff", group: "How it works", label: "The payoff", body: (
-      <>
-        <p>Vellum notes are <b>capped call spreads</b> — principal-protected on the downside, with a capped upside:</p>
-        <div className={styles.formula}>payoff = principal + <span className="kw">min</span>(cap, leverage · <span className="kw">max</span>(0, refEnd − strike))</div>
-        <p><b>principal</b> and <b>cap</b> are public per note — you only need the <em>bound</em> public, never the terms. <b>strike</b> and <b>leverage</b> are encrypted. <b>refEnd</b> is the public reference price at maturity (a Chainlink feed). The whole expression is computed <b>branchless on ciphertext</b> — FHE has no &quot;if&quot; on encrypted values, so both branches are computed and the wrong one is discarded with an encrypted select.</p>
-        <div className={styles.callout}>
-          <span className={styles.ic}>{checkIcon}</span>
-          <span className={styles.cbody}><b>Overflow is impossible by construction.</b> Inputs are clamped on-chain (leverage ≤ 1e6, delta ≤ 1e12) so every intermediate stays under 2⁶³. There is no encrypted division, and a single 1e6 scale throughout.</span>
-        </div>
-      </>
-    ) },
-    { id: "solvency", group: "How it works", label: "Solvency", body: (
-      <>
-        <p>The hard problem with confidential derivatives is proving they&apos;re funded without exposing them. Vellum&apos;s answer: at issuance the reserve is funded to <b>maxPayoff = principal + cap</b> by wrapping real USDC into confidential cUSDT — a public-amount operation that <b>reverts if underfunded</b> (no silent clamp, no phantom credit).</p>
-        <div className={styles.formula}><span className="kw">require</span>(reserveFunded ≥ Σ maxPayoff)  <span style={{ color: "var(--text-tertiary)" }}>// publicly checkable, always</span></div>
-        <p>Anyone can read the two public accumulators to verify the protocol is solvent — while every individual note&apos;s strike and leverage stay sealed. <b>Only the aggregate bound is public; never a single term.</b></p>
-      </>
-    ) },
-    { id: "privacy", group: "How it works", label: "Privacy & reveal", body: (
-      <>
-        <p>When a note matures, the holder signs an <b>EIP-712</b> request and decrypts <b>their</b> payoff client-side, through the Zama relayer. The contract authorizes exactly one address — the holder — to decrypt exactly one value — the final payoff. A second wallet is rejected on-chain by the FHEVM access-control list.</p>
-        <div className={`${styles.callout} ${styles.cipher}`}>
-          <span className={styles.ic}>{sealIcon}</span>
-          <span className={styles.cbody}>The comparison bit, the intermediate delta, the strike, and the leverage are <b>never</b> granted to anyone — leaking any of them would reveal moneyness or terms. Only <span className={styles.warm}>your</span> final payoff is ever revealed, and only to you.</span>
-        </div>
-      </>
-    ) },
-    { id: "lifecycle", group: "How it works", label: "Lifecycle", body: (
-      <div className={styles.steps}>
-        <div className={styles.step}><div className={styles.st}>Issue</div><div className={styles.sd}>Public (principal, cap, settlement window) + encrypted (strike, leverage) as a ZK-proved input. The reserve is funded by wrapping USDC.</div></div>
-        <div className={styles.step}><div className={styles.st}>Settle</div><div className={styles.sd}>Permissionless once the window closes. Finalizes the reference price from the oracle — a window TWAP, or the price at maturity if the window went unsampled. Settle-once.</div></div>
-        <div className={styles.step}><div className={styles.st}>Claim</div><div className={styles.sd}>Holder-only. Computes the payoff, grants the holder decrypt access, and transfers the encrypted amount out of the reserve via a confidential ERC-7984 transfer.</div></div>
-        <div className={styles.step}><div className={styles.st}>Reveal</div><div className={styles.sd}>The holder decrypts their payoff. Confidential distribution can pay a whole set of note-holders at once, each seeing only their own amount.</div></div>
-      </div>
-    ) },
-    { id: "contracts", group: "Reference", label: "Live contracts", body: (
-      <div className={styles.reftable}>
-        <div className={styles.refrow}><span className={styles.k}>ConfidentialNote <span className={styles.verified}>{checkIcon}verified</span></span><a href={ex(p.note)} target="_blank" rel="noreferrer">{shortAddr(p.note)} ↗</a></div>
-        <div className={styles.refrow}><span className={styles.k}>Oracle adapter (XAU/USD) <span className={styles.verified}>{checkIcon}verified</span></span><a href={ex(p.oracle)} target="_blank" rel="noreferrer">{shortAddr(p.oracle)} ↗</a></div>
-        <div className={styles.refrow}><span className={styles.k}>Disperse singleton (TokenOps)</span><a href={ex(p.disperse)} target="_blank" rel="noreferrer">{shortAddr(p.disperse)} ↗</a></div>
-        <div className={styles.refrow}><span className={styles.k}>Confidential-wrapper registry (Zama)</span><a href={ex(p.registry)} target="_blank" rel="noreferrer">{shortAddr(p.registry)} ↗</a></div>
-      </div>
-    ) },
-    { id: "feeds", group: "Reference", label: "Reference feeds", body: (
-      <div className={styles.reftable}>
-        <div className={styles.refrow}><span className={styles.k}>XAU / USD (gold — reference leg)</span><a href={ex(p.xau)} target="_blank" rel="noreferrer">{shortAddr(p.xau)} ↗</a></div>
-        <div className={styles.refrow}><span className={styles.k}>ETH / USD (oracle fallback)</span><a href={ex(p.eth)} target="_blank" rel="noreferrer">{shortAddr(p.eth)} ↗</a></div>
-        <div className={styles.refrow}><span className={styles.k}>BTC / USD</span><a href={ex(p.btc)} target="_blank" rel="noreferrer">{shortAddr(p.btc)} ↗</a></div>
-        <div className={styles.refrow}><span className={styles.k}>Confidential disperse total</span><span className={styles.ok}>encrypted on-chain</span></div>
-      </div>
-    ) },
-    { id: "run", group: "Reference", label: "Run it", body: (
-      <>
-        <p>Everything here is live on Sepolia against real on-chain infrastructure — no mocks in the note flow. To try the reveal: connect the note-holder wallet on the <b>Products</b> page and decrypt the payoff. A wallet that isn&apos;t the holder is correctly refused.</p>
-        <div className={styles.formula}><span className="kw">cd</span> web && npm install && npm run dev   <span style={{ color: "var(--text-tertiary)" }}># http://localhost:3939</span></div>
-      </>
-    ) },
-  ];
+  const pages = useMemo<DocPage[]>(
+    () => [
+      {
+        id: "what",
+        group: "Overview",
+        label: "What is Vellum",
+        body: (
+          <>
+            <p>
+              Vellum is composable confidential finance on Zama FHEVM: assets wrap into private form, agreements compute on encrypted terms, and payouts reveal only to the holder. It is one system, presented as
+              three artifacts.
+            </p>
+            <p>
+              It runs on fully homomorphic encryption — math executes directly on encrypted numbers, so a value can be present and computable on-chain while staying unreadable to everyone but its owner.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "tracks",
+        group: "Overview",
+        label: "The three artifacts",
+        body: (
+          <>
+            <p>The same codebase serves three composable surfaces. Each is a live Sepolia deep link.</p>
+            <SeeList
+              items={[
+                ["Builder · Vellum Notes → /products", "Confidential structured notes: encrypted strike and leverage, on-chain payoff compute, holder-only reveal."],
+                ["Bounty · Vellum Registry → /registry", "Confidential Wrapper Registry: faucet → approve → wrap → reveal, and decrypt any ERC-7984 — real Sepolia transactions."],
+                ["TokenOps · Vellum Distribute → /distributions", "Confidential disperse via the TokenOps SDK: sealed per-recipient amounts, each recipient reveals only their own."],
+              ]}
+            />
+          </>
+        ),
+      },
+      {
+        id: "why",
+        group: "Overview",
+        label: "Why FHE",
+        body: (
+          <>
+            <p>To compute on a public chain, you normally have to expose the agreement — every counterparty can read your strike, your size, your leverage.</p>
+            <p>
+              Vellum keeps the terms encrypted end to end. The payoff <span className="text-settle-400">still computes correctly</span> while strike and leverage never leave ciphertext. That is the primitive FHE
+              unlocks for public chains, and the thread through all three artifacts.
+            </p>
+          </>
+        ),
+      },
+
+      {
+        id: "b-lifecycle",
+        group: "Builder · Notes",
+        label: "Note lifecycle",
+        body: (
+          <div className="grid gap-3">
+            {[
+              ["Issue", "Public principal, cap, and settlement window plus encrypted strike and leverage. The reserve is funded by wrapping USDC — a public-amount operation that reverts if underfunded."],
+              ["Settle", "Permissionless once the window closes. Finalizes the reference price from the oracle (TWAP over the window, or a maturity-pinned spot fallback)."],
+              ["Claim", "Holder-only. Computes the payoff on ciphertext, grants the holder decrypt access, and transfers the encrypted amount via ERC-7984."],
+              ["Reveal", "The holder signs an EIP-712 request and decrypts their payoff locally. A non-holder wallet is refused by the FHEVM access-control list."],
+            ].map(([title, desc]) => (
+              <Card key={title} className="p-4">
+                <h3 className="font-mono text-[13px] text-text-primary">{title}</h3>
+                <p className="mt-2 text-[13px] leading-6 text-text-secondary">{desc}</p>
+              </Card>
+            ))}
+          </div>
+        ),
+      },
+      {
+        id: "b-payoff",
+        group: "Builder · Notes",
+        label: "The payoff",
+        body: (
+          <>
+            <p>Vellum notes are capped call spreads: principal protected on the downside, upside capped.</p>
+            <Formula>payoff = principal + min(cap, leverage · max(0, refEnd − strike))</Formula>
+            <SeeList
+              items={[
+                ["Encrypted", "strike, leverage, and the per-holder payoff — euint64 ciphertext, never granted to anyone but the holder."],
+                ["Public", "principal and cap (the solvency bound), the Chainlink reference price refEnd, and settlement status."],
+              ]}
+            />
+            <div className="my-5 flex gap-3 rounded-lg border border-settle-500/25 bg-settle-500/10 p-4">
+              <Check className="mt-0.5 size-4 shrink-0 text-settle-400" />
+              <p className="text-[13px] leading-6 text-text-secondary">
+                <b className="text-settle-400">Overflow is impossible by construction.</b> Inputs are clamped on-chain: leverage &lt;= 1e6, delta &lt;= 1e12, every intermediate stays under 2^63, and there is no
+                encrypted division. The whole expression is branchless on <MachineValue>euint64</MachineValue>.
+              </p>
+            </div>
+          </>
+        ),
+      },
+      {
+        id: "b-demo",
+        group: "Builder · Notes",
+        label: "Demo path",
+        body: (
+          <>
+            <p>The live note is a settled gold-linked, principal-protected note on Products.</p>
+            <Steps
+              items={[
+                "Open /products and read the sealed terms and the capped call-spread chart — the strike stays a sealed tick.",
+                "Connect the holder wallet on Sepolia (the holder address is shown in the header).",
+                "Press Reveal payoff — sign one EIP-712 request and the payoff decrypts locally, warm, for you only.",
+                "Follow the note contract link to verify settlement on Etherscan.",
+              ]}
+            />
+          </>
+        ),
+      },
+
+      {
+        id: "r-source",
+        group: "Bounty · Registry",
+        label: "Registry source",
+        body: (
+          <>
+            <p>
+              Registry reads the live Zama Wrappers Registry on Sepolia — every ERC-20 ↔ ERC-7984 pair, on-chain, no hardcoded list. The registry address and pair count are shown in the header as a source anchor.
+            </p>
+            <Card className="overflow-hidden">
+              <ReferenceRow label="Zama Wrappers Registry · Sepolia" value={shortAddr(p.registry)} href={ex(p.registry)} />
+            </Card>
+          </>
+        ),
+      },
+      {
+        id: "r-wrap",
+        group: "Bounty · Registry",
+        label: "Wrap · reveal · unwrap",
+        body: (
+          <>
+            <p>The full confidential-asset loop runs as real Sepolia transactions on the Registry surface.</p>
+            <Steps
+              items={[
+                "Claim the USDC test faucet (public mint).",
+                "Approve the wrapper to pull your USDC.",
+                "Wrap USDC into its confidential ERC-7984 twin (cUSDT) — the balance moves to a sealed register.",
+                "Reveal the confidential balance locally with an EIP-712 signature — holder-decrypt only.",
+              ]}
+            />
+            <p>Unwrap reverses the wrap through the ERC-7984 two-step confidential→public flow (request, then finalize against a KMS public-decrypt proof), returning the public USDC.</p>
+          </>
+        ),
+      },
+      {
+        id: "r-decrypt",
+        group: "Bounty · Registry",
+        label: "Decrypt any ERC-7984",
+        body: (
+          <>
+            <p>
+              The registry ships a decrypt utility for <b>any</b> confidential token, not just registered pairs. Paste an ERC-7984 address; Vellum reads your sealed balance handle and reveals it locally with an
+              EIP-712 signature.
+            </p>
+            <div className="my-5 flex gap-3 rounded-lg border border-cipher-500/25 bg-cipher-500/10 p-4">
+              <LockKeyhole className="mt-0.5 size-4 shrink-0 text-cipher-400" />
+              <p className="text-[13px] leading-6 text-text-secondary">
+                The balance decrypts only for the wallet that holds it. A wallet with no balance — or no authorization — receives a seal, never a number.
+              </p>
+            </div>
+          </>
+        ),
+      },
+      {
+        id: "r-addpair",
+        group: "Bounty · Registry",
+        label: "Adding a pair",
+        body: (
+          <>
+            <p>Pairs come from the on-chain registry, so extensibility is a registry write, not an app change.</p>
+            <SeeList
+              items={[
+                ["On-chain source", "The app reads getTokenConfidentialTokenPairs() from the registry — register a new ERC-20 ↔ ERC-7984 wrapper there and it appears live, filtered on isValid."],
+                ["Vellum test assets", "cUSDM is an open-faucet ERC-7984 Vellum uses for distribution demos — labeled separately from registry-sourced pairs, never mixed in."],
+              ]}
+            />
+          </>
+        ),
+      },
+
+      {
+        id: "t-sdk",
+        group: "TokenOps · Distribute",
+        label: "TokenOps SDK",
+        body: (
+          <>
+            <p>
+              Vellum Distribute is built on the TokenOps SDK confidential <MachineValue>/fhe-disperse</MachineValue> singleton — a live, consumed contract, never redeployed by Vellum.
+            </p>
+            <Card className="overflow-hidden">
+              <ReferenceRow label="TokenOps /fhe-disperse singleton" value={shortAddr(p.disperse)} href={ex(p.disperse)} />
+            </Card>
+            <p>Amounts are committed as per-recipient externalEuint64 handles under one ZK proof. There is no plaintext total in the calldata.</p>
+          </>
+        ),
+      },
+      {
+        id: "t-flow",
+        group: "TokenOps · Distribute",
+        label: "Sender & recipient",
+        body: (
+          <>
+            <p>Two roles, one confidential distribution.</p>
+            <SeeList
+              items={[
+                ["Sender", "Commits sealed per-recipient allocations on-chain via the SDK disperse. No recipient can read another's amount; the committed total stays encrypted."],
+                ["Recipient", "Opens the receipt, connects their wallet, and reveals only their own received allocation with an EIP-712 signature — a reveal, not a claim transaction."],
+              ]}
+            />
+            <p className="text-[13px] text-text-tertiary">Vellum never labels an action “claim” unless it triggers a real claim transaction; the recipient surface is a reveal receipt.</p>
+          </>
+        ),
+      },
+      {
+        id: "t-privacy",
+        group: "TokenOps · Distribute",
+        label: "Privacy model",
+        body: (
+          <>
+            <p>What a confidential disperse keeps private, and what it necessarily reveals.</p>
+            <SeeList
+              items={[
+                ["Sealed", "Every per-recipient amount, and the committed total — all encrypted on-chain as ERC-7984 balances."],
+                ["Recipient-scoped", "A recipient decrypts only their own allocation; cross-recipient and non-recipient reads are refused by the ACL."],
+                ["Leaked (accepted)", "The recipient count N is visible; individual amounts and identities-to-amounts are not."],
+              ]}
+            />
+          </>
+        ),
+      },
+
+      {
+        id: "contracts",
+        group: "Reference",
+        label: "Live contracts",
+        body: (
+          <Card className="overflow-hidden">
+            <ReferenceRow label="ConfidentialNote V4 · verified" value={shortAddr(p.note)} href={ex(p.note)} />
+            <ReferenceRow label="OracleAdapter · verified" value={shortAddr(p.oracle)} href={ex(p.oracle)} />
+            <ReferenceRow label="Zama wrapper registry" value={shortAddr(p.registry)} href={ex(p.registry)} />
+            <ReferenceRow label="TokenOps /fhe-disperse singleton" value={shortAddr(p.disperse)} href={ex(p.disperse)} />
+            <ReferenceRow label="Chainlink XAU / USD · note reference" value={shortAddr(p.xau)} href={ex(p.xau)} />
+          </Card>
+        ),
+      },
+      {
+        id: "deploy",
+        group: "Reference",
+        label: "Deployment",
+        body: (
+          <>
+            <p>Everything runs on Sepolia against real on-chain infrastructure — no mocks in the product path.</p>
+            <SeeList
+              items={[
+                ["Live app", "vellum-production-e698.up.railway.app — deep links /registry, /products, /distributions."],
+                ["Client", "Next.js 16 · React 19 · viem · wagmi + RainbowKit · @zama-fhe/relayer-sdk for the reveal."],
+                ["Contracts", "Solidity 0.8.27 · @fhevm/solidity 0.11.1 · OpenZeppelin confidential-contracts (ERC-7984)."],
+                ["Distribution", "@tokenops/sdk fhe-disperse against the live singleton."],
+              ]}
+            />
+            <Formula>cd web && npm install && npm run dev # http://localhost:3939</Formula>
+          </>
+        ),
+      },
+      {
+        id: "limits",
+        group: "Reference",
+        label: "Known limitations",
+        body: (
+          <>
+            <p>The current hackathon deployment supports Sepolia and demo product templates.</p>
+            <SeeList
+              items={[
+                ["Confidentiality boundary", "The privacy guarantee holds while value is held as a confidential ERC-7984. Unwrapping to a public ERC-20 makes that amount public — inherent to any confidential→public bridge."],
+                ["Note issuance", "The live note is read-only in the UI; issuance runs via the deploy scripts. Create-note is on the roadmap."],
+                ["Audit", "Testnet-complete, not audited. The sole remaining blocker for mainnet is a formal third-party security audit; do not deposit real value."],
+              ]}
+            />
+          </>
+        ),
+      },
+    ],
+    [p],
+  );
 
   const [idx, setIdx] = useState(0);
   const cur = pages[idx];
-  const groups = Array.from(new Set(pages.map((pg) => pg.group)));
-  const go = (i: number) => { setIdx(i); const pane = document.getElementById("docsPane"); if (pane) pane.scrollTop = 0; };
+
+  const go = (i: number) => {
+    if (i < 0 || i >= pages.length) return;
+    setIdx(i);
+    window.history.pushState(null, "", `#${pages[i].id}`);
+    const pane = document.getElementById("docsPane");
+    if (pane) pane.scrollTop = 0;
+  };
+
+  useEffect(() => {
+    const syncHash = () => {
+      const id = window.location.hash.replace(/^#/, "") || new URLSearchParams(window.location.search).get("section") || "what";
+      const next = pages.findIndex((page) => page.id === id);
+      if (next >= 0) setIdx(next);
+    };
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    window.addEventListener("popstate", syncHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHash);
+      window.removeEventListener("popstate", syncHash);
+    };
+  }, [pages]);
 
   return (
-    <div className={styles.layout}>
-      <nav className={styles.nav}>
-        {groups.map((g) => (
-          <div key={g} className={styles.navGroup}>
-            <div className={styles.navGroupLabel}>{g}</div>
-            {pages.map((pg, i) => pg.group === g ? (
-              <button key={pg.id} className={`${styles.navLink} ${i === idx ? styles.active : ""}`} onClick={() => go(i)}>
-                <span className={styles.navNum}>{String(i + 1).padStart(2, "0")}</span>{pg.label}
-              </button>
-            ) : null)}
+    <div className="grid h-[calc(100vh-60px)] grid-cols-[282px_1fr] overflow-hidden max-lg:grid-cols-1">
+      <nav className="border-r border-border-hairline bg-ink-900 p-5 max-lg:hidden">
+        {GROUPS.map((group) => (
+          <div key={group} className="mb-6">
+            <div className="mb-2 px-2 font-mono text-[11px] uppercase text-text-tertiary">{group}</div>
+            <div className="grid gap-1">
+              {pages.map((page, i) =>
+                page.group === group ? (
+                  <button
+                    key={page.id}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] text-text-secondary transition-colors hover:bg-white/[0.04] hover:text-text-primary",
+                      i === idx && "bg-flow-500/10 text-text-primary",
+                    )}
+                    onClick={() => go(i)}
+                  >
+                    <MachineValue className={cn("text-[11px] text-text-tertiary", i === idx && "text-flow-400")}>{String(i + 1).padStart(2, "0")}</MachineValue>
+                    {page.label}
+                  </button>
+                ) : null,
+              )}
+            </div>
           </div>
         ))}
       </nav>
 
-      <div className={styles.pane} id="docsPane">
-        <article className={styles.page}>
-          {idx === 0 && (
-            <>
-              <span className={styles.eyebrow}><span className={styles.d} />Documentation</span>
-              <h1 className={styles.pageTitle}>Vellum — confidential structured notes.</h1>
-              <p className={styles.pageLede}>Financial agreements whose terms compute while sealed. An issuer creates a note whose strike and leverage stay encrypted on-chain, whose payoff is computed on ciphertext, and which only the holder can decrypt — while anyone can verify it&apos;s fully funded.</p>
-            </>
-          )}
-          {idx !== 0 && (
-            <>
-              <span className={styles.eyebrow}><span className={styles.d} />{cur.group}</span>
-              <h1 className={styles.pageTitle}>{cur.label}</h1>
-            </>
-          )}
-          <div className={styles.prose}>{cur.body}</div>
+      <div className="overflow-y-auto" id="docsPane">
+        <article className="mx-auto max-w-[840px] px-9 py-10 max-sm:px-4">
+          <div className="mb-7">
+            <MachineValue className="text-[12px] uppercase text-flow-400">{cur.group}</MachineValue>
+            <h1 className="mt-3 text-[36px] font-semibold leading-tight text-text-primary max-sm:text-[28px]">{idx === 0 ? "Vellum: confidential structured finance." : cur.label}</h1>
+            {idx === 0 && (
+              <p className="mt-4 max-w-[68ch] text-[16px] leading-7 text-text-secondary">
+                One composable system on Zama FHEVM, submitted as three artifacts: Vellum Notes (Builder), Vellum Registry (Bounty), and Vellum Distribute (TokenOps).
+              </p>
+            )}
+          </div>
 
-          <div className={styles.pager}>
-            <button className={styles.pagerBtn} onClick={() => go(idx - 1)} disabled={idx === 0}>
-              <span className={styles.pagerDir}>← Previous</span>
-              <span className={styles.pagerLabel}>{idx > 0 ? pages[idx - 1].label : ""}</span>
-            </button>
-            <button className={`${styles.pagerBtn} ${styles.next}`} onClick={() => go(idx + 1)} disabled={idx === pages.length - 1}>
-              <span className={styles.pagerDir}>Next →</span>
-              <span className={styles.pagerLabel}>{idx < pages.length - 1 ? pages[idx + 1].label : ""}</span>
-            </button>
+          <div className="prose-vellum">{cur.body}</div>
+
+          <div className="mt-10 grid grid-cols-2 gap-3 border-t border-border-hairline pt-5 max-sm:grid-cols-1">
+            <Button variant="secondary" className="h-auto justify-start py-3" onClick={() => go(idx - 1)} disabled={idx === 0}>
+              <ArrowLeft className="size-4" />
+              <span className="text-left">
+                <span className="block text-[11px] text-text-tertiary">Previous</span>
+                <span>{idx > 0 ? pages[idx - 1].label : "Start"}</span>
+              </span>
+            </Button>
+            <Button variant="secondary" className="h-auto justify-end py-3" onClick={() => go(idx + 1)} disabled={idx === pages.length - 1}>
+              <span className="text-right">
+                <span className="block text-[11px] text-text-tertiary">Next</span>
+                <span>{idx < pages.length - 1 ? pages[idx + 1].label : "Done"}</span>
+              </span>
+              <ArrowRight className="size-4" />
+            </Button>
           </div>
         </article>
       </div>
