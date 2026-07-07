@@ -8,6 +8,8 @@ system, submitted as three track artifacts** for the Zama Developer Program Main
 
 **Live on Sepolia · [vellum-production-e698.up.railway.app](https://vellum-production-e698.up.railway.app)**
 
+**🎥 Video walkthrough · [Watch on X](https://x.com/winsznx/status/2074628751476801741)** — the full pitch, with a demo for each track below it.
+
 > Vellum makes financial agreements programmable and confidential: assets wrap into private form, terms
 > compute encrypted, and payouts reveal only to the holder.
 
